@@ -1,15 +1,19 @@
 <!--
 Sync Impact Report
-- Version change: (unversioned template) → 1.0.0
-- Principles defined (template placeholders → new titles):
-  - [PRINCIPLE_1_NAME] → I. Clarity Over Cleverness
-  - [PRINCIPLE_2_NAME] → II. Harness From Scratch (No Agent Frameworks)
-  - [PRINCIPLE_3_NAME] → III. Pinned Protocol Targets
-  - [PRINCIPLE_4_NAME] → IV. Typed, Linted, Tested (NON-NEGOTIABLE)
-  - [PRINCIPLE_5_NAME] → V. One-Way Package Dependencies
-- Added sections: Technology & Platform Constraints; Development Workflow & Quality Gates
+- Version change: 1.0.0 → 2.0.0 (MAJOR: new workspace dependency edge a2a → mcp, which
+  Governance classes as MAJOR)
+- Modified principles (titles unchanged):
+  - I. Clarity Over Cleverness: a test fake now counts as a concrete use for the two-uses rule
+  - V. One-Way Package Dependencies: `a2a` MAY now depend on `mcp`; graph MUST stay acyclic;
+    rationale updated
+- Modified sections:
+  - Development Workflow & Quality Gates: Principle IV gates MUST pass locally and in CI
+    (.github/workflows/ci.yml); a change is not done while CI is red
+- Added sections: none
 - Removed sections: none
 - Templates: dependent templates read this file at runtime; none modified by this amendment
+- Follow-up (outside this file): README.md "Layout" still says `a2a` depends on `harness` only;
+  packages/a2a/pyproject.toml does not yet declare `agent-stack-mcp`
 - Deferred TODOs: none
 -->
 
@@ -26,7 +30,9 @@ agent-stack is a learning project. Code exists to be read and understood first.
   comment explaining what it does and why.
 - Names MUST describe intent. Modules SHOULD be small and single-purpose.
 - New abstractions MUST be justified by at least two concrete uses; speculative generality is
-  rejected (YAGNI).
+  rejected (YAGNI). A test fake counts as a concrete use, so an interface with one real
+  implementation plus a fake used in tests (for example, the Bedrock provider interface)
+  satisfies this rule.
 - Non-obvious protocol or design decisions MUST be documented next to the code or in the
   feature's spec/plan, so a reader can learn *why*, not only *what*.
 
@@ -87,7 +93,9 @@ amendment:
 - `harness` (`agent_stack_harness`) depends on nothing in the workspace.
 - `knowledge-graph` (`agent_stack_kg`) depends on nothing in the workspace.
 - `mcp` (`agent_stack_mcp`) MAY depend on `harness` and `knowledge-graph`.
-- `a2a` (`agent_stack_a2a`) MAY depend on `harness`.
+- `a2a` (`agent_stack_a2a`) MAY depend on `harness` and `mcp`.
+- The dependency graph MUST stay acyclic: no package may depend, directly or transitively, on a
+  package that depends on it.
 
 Further rules:
 
@@ -96,7 +104,10 @@ Further rules:
 - Integration points (for example, the harness consuming MCP tools) MUST be expressed as
   interfaces owned by the lower package and implemented by the higher one.
 
-Rationale: a one-way graph keeps each package understandable and testable on its own.
+Rationale: a one-way graph keeps each package understandable and testable on its own. The
+`a2a` → `mcp` edge exists because the A2A agent wraps a harness that reaches the knowledge graph
+through the MCP client adapter; it points from the last-built package to an earlier one, so the
+graph stays acyclic.
 
 ## Technology & Platform Constraints
 
@@ -118,7 +129,8 @@ Rationale: a one-way graph keeps each package understandable and testable on its
 - Work proceeds through Spec Kit: specify → (clarify) → plan → tasks → implement. Each plan MUST
   include a Constitution Check against Principles I–V and record any justified exception in its
   Complexity Tracking section.
-- A change is complete only when all Principle IV gates pass locally from a clean `uv sync`.
+- A change is complete only when all Principle IV gates pass both locally from a clean `uv sync`
+  and in CI (`.github/workflows/ci.yml`). A change is not done while CI is red.
 - Runtime dependencies are added to the specific package that needs them
   (`uv add --package <name> ...`), never to the workspace root.
 - Commits SHOULD be small and focused on one change, with messages that explain the reason.
@@ -138,4 +150,4 @@ Rationale: a one-way graph keeps each package understandable and testable on its
   complete. Unjustified violations block the feature.
 - Runtime development guidance (commands, pinned versions, layout) lives in `README.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-14 | **Last Amended**: 2026-11-14
+**Version**: 2.0.0 | **Ratified**: 2026-11-14 | **Last Amended**: 2026-11-14

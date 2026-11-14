@@ -53,4 +53,4 @@ terraform validate
 
 ## Layout
 
-Each package uses a `src/` layout and ships `py.typed`. Import names are prefixed `agent_stack_` so they never shadow the `mcp` or `a2a` SDK packages. Dependencies point one way: `harness` and `kg` depend on nothing in the workspace; `mcp` depends on both; `a2a` depends on `harness`.
+Each package uses a `src/` layout and ships `py.typed`. Import names are prefixed `agent_stack_` so they never shadow the `mcp` or `a2a` SDK packages. Dependencies point one way: `harness` and `kg` depend on nothing in the workspace; `mcp` depends on both; `a2a` depends on `harness` and `mcp`.
